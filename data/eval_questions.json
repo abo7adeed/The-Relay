@@ -1,0 +1,152 @@
+[
+  {
+    "id": "Q01",
+    "paper": "Attention Is All You Need",
+    "type": "specific_fact",
+    "question": "What dropout rate was applied to the sums of the embeddings and the positional encodings in the Transformer?",
+    "ground_truth": "A dropout rate of P_drop = 0.1 was applied to the sums of the embeddings and the positional encodings in both the encoder and decoder stacks.",
+    "target_citation": "[Attention Is All You Need, Residual Dropout, Page 8]",
+    "verified_quote": "In addition, we apply dropout to the sums of the embeddings and the positional encodings in both the encoder and decoder stacks. For the base model, we use a rate of P drop = 0 . 1 .",
+    "status": "VERIFIED_AGAINST_PDF"
+  },
+  {
+    "id": "Q02",
+    "paper": "Attention Is All You Need",
+    "type": "specific_fact",
+    "question": "How many warmup steps were used in the Adam optimizer learning rate schedule?",
+    "ground_truth": "warmup_steps = 4000 were used in the Adam optimizer learning rate schedule.",
+    "target_citation": "[Attention Is All You Need, 5.3 Optimizer, Page 7]",
+    "verified_quote": "We used warmup _ steps = 4000 .",
+    "status": "VERIFIED_AGAINST_PDF"
+  },
+  {
+    "id": "Q03",
+    "paper": "Attention Is All You Need",
+    "type": "specific_fact",
+    "question": "What was the value of the label smoothing parameter used during training?",
+    "ground_truth": "During training, label smoothing of value epsilon_ls = 0.1 was employed.",
+    "target_citation": "[Attention Is All You Need, Label Smoothing, Page 8]",
+    "verified_quote": "During training, we employed label smoothing of value ϵ ls = 0 . 1 [ 36 ]. This hurts perplexity, as the model learns to be more unsure, but improves accuracy and BLEU score.",
+    "status": "VERIFIED_AGAINST_PDF"
+  },
+  {
+    "id": "Q04",
+    "paper": "Attention Is All You Need",
+    "type": "formula_values",
+    "question": "What were the dimension sizes for keys (d_k) and values (d_v) in each head of the 8-head multi-head attention?",
+    "ground_truth": "For each of the h = 8 parallel attention heads, d_k = d_v = d_model / h = 64.",
+    "target_citation": "[Attention Is All You Need, 3.2.2 Multi-Head Attention, Page 5]",
+    "verified_quote": "In this work we employ h = 8 parallel attention layers, or heads. For each of these we use d k = d v = d model /h = 64 .",
+    "status": "VERIFIED_AGAINST_PDF"
+  },
+  {
+    "id": "Q05",
+    "paper": "Moshi",
+    "type": "table_numeric",
+    "question": "What is the bitrate and frame rate of the Mimi neural audio codec used in Moshi?",
+    "ground_truth": "The Mimi codec operates at a frame rate of 12.5 Hz (corresponding to an 80ms stride) and a bitrate of 1.1 kbps.",
+    "target_citation": "[Moshi: a speech-text foundation model for real-time dialogue, 3.3.1 Architecture, Page 11]",
+    "verified_quote": "We use Q = 8 quantizers, each with a codebook size of N A = 2048. At 12.5Hz, this represents a bitrate of 1.1kbps.",
+    "status": "VERIFIED_AGAINST_PDF"
+  },
+  {
+    "id": "Q06",
+    "paper": "Moshi",
+    "type": "timing_mechanism",
+    "question": "How does the acoustic delay relate to the audio frame step size in Moshi, and what latency does it introduce?",
+    "ground_truth": "Each step of acoustic delay corresponds to 1 audio frame (80 ms step size). Pretraining uses an acoustic delay of 2 steps (160 ms), fine-tuning uses an acoustic delay of 1 step (80 ms), and practical conversational latency is approximately 200 ms.",
+    "target_citation": "[Moshi: a speech-text foundation model for real-time dialogue, 5.3 Ablations on generative modeling, Page 26]",
+    "verified_quote": "Moreover, and as described in Table 1 , we settle on a theoretical latency of 160ms by pretraining Moshi with an acoustic delay of 2 and finetuning it with an acoustic delay of 1.",
+    "status": "VERIFIED_AGAINST_PDF"
+  },
+  {
+    "id": "Q07",
+    "paper": "Moshi",
+    "type": "architecture",
+    "question": "How many Residual Vector Quantization (RVQ) codebooks does the Mimi codec utilize for speech, and what is the codebook size?",
+    "ground_truth": "Mimi uses Q = 8 RVQ codebooks (quantizers), each with a codebook size of N_A = 2048 centroids.",
+    "target_citation": "[Moshi: a speech-text foundation model for real-time dialogue, 3.3.1 Architecture, Page 11]",
+    "verified_quote": "We use Q = 8 quantizers, each with a codebook size of N A = 2048.",
+    "status": "VERIFIED_AGAINST_PDF"
+  },
+  {
+    "id": "Q08",
+    "paper": "Moshi",
+    "type": "numeric_claim",
+    "question": "What is the overall latency claimed for Moshi in conversational dialogue (both theoretical and practical)?",
+    "ground_truth": "Moshi achieves a theoretical latency of 160 ms and approximately 200 ms in practice.",
+    "target_citation": "[Moshi: a speech-text foundation model for real-time dialogue, Abstract, Page 1]",
+    "verified_quote": "Our resulting model is the first real-time full-duplex spoken large language model, with a theoretical latency of 160ms, 200ms in practice, and is available at github.com/kyutai-labs/moshi .",
+    "status": "VERIFIED_AGAINST_PDF"
+  },
+  {
+    "id": "Q09",
+    "paper": "Dynamic Chunking",
+    "type": "benchmark_claim",
+    "question": "What was the data efficiency gain observed for H-Net on DNA sequences compared to baseline models?",
+    "ground_truth": "H-Net demonstrated nearly a 4x improvement in data efficiency over baselines on DNA sequences (specifically 3.6x compared to isotropic models).",
+    "target_citation": "[Dynamic Chunking for End-to-End Hierarchical Sequence Modeling, Abstract, Page 1]",
+    "verified_quote": "or DNA sequences (nearly 4 × improvement in data efficiency over baselines), showing the potential of true end-to-end models that learn and scale better from unprocessed data.",
+    "status": "VERIFIED_AGAINST_PDF"
+  },
+  {
+    "id": "Q10",
+    "paper": "Dynamic Chunking",
+    "type": "mechanism",
+    "question": "How does H-Net dynamically determine chunk boundaries without a tokenizer?",
+    "ground_truth": "H-Net uses a chunking layer with a routing module that calculates cosine similarity between adjacent encoder outputs to predict boundary probabilities p_t and discrete boundary indicators b_t directly from raw data.",
+    "target_citation": "[Dynamic Chunking for End-to-End Hierarchical Sequence Modeling, 2.2.1 Chunking Layer, Page 6]",
+    "verified_quote": "The routing module implements this intuition through cosine similarity between adjacent encoder outputs.",
+    "status": "VERIFIED_AGAINST_PDF"
+  },
+  {
+    "id": "Q11",
+    "paper": "Dynamic Chunking",
+    "type": "modalities",
+    "question": "What sequence modalities were tested to evaluate H-Net beyond standard English text?",
+    "ground_truth": "Chinese text, computer source code, and DNA sequences.",
+    "target_citation": "[Dynamic Chunking for End-to-End Hierarchical Sequence Modeling, 3.2 Alternate Language Datasets, Page 15]",
+    "verified_quote": "Besides conventional language modeling, we also examine three other language modeling settings: Chinese, code, and DNA.",
+    "status": "VERIFIED_AGAINST_PDF"
+  },
+  {
+    "id": "Q12",
+    "paper": "Cross-Corpus False Friend Trap",
+    "type": "false_friend",
+    "question": "What is the dynamic chunk size and frame rate used for streaming speech tokens in H-Net?",
+    "ground_truth": "REFUSAL: The paper on H-Net (Dynamic Chunking) does not model streaming speech; frame rates and streaming speech tokens belong to the Moshi paper, not H-Net.",
+    "target_citation": "REFUSED_CORRECTLY",
+    "verified_quote": "N/A - Cross-corpus false friend trap",
+    "status": "VERIFIED_AGAINST_PDF"
+  },
+  {
+    "id": "Q13",
+    "paper": "Cross-Corpus False Friend Trap",
+    "type": "false_friend",
+    "question": "How does the Transformer encoder in Attention Is All You Need dynamically adjust chunk boundaries for self-attention?",
+    "ground_truth": "REFUSAL: Attention Is All You Need does not dynamically adjust chunk boundaries; dynamic chunking is introduced in the H-Net paper, whereas the 2017 Transformer uses static full-sequence self-attention.",
+    "target_citation": "REFUSED_CORRECTLY",
+    "verified_quote": "N/A - Cross-corpus false friend trap",
+    "status": "VERIFIED_AGAINST_PDF"
+  },
+  {
+    "id": "Q14",
+    "paper": "Out of Library Negative",
+    "type": "unanswerable",
+    "question": "What was the batch size and learning rate used to pretrain LLaMA 3?",
+    "ground_truth": "REFUSAL: The paper library does not contain information about LLaMA 3.",
+    "target_citation": "REFUSED_CORRECTLY",
+    "verified_quote": "N/A - Out of library negative",
+    "status": "VERIFIED_AGAINST_PDF"
+  },
+  {
+    "id": "Q15",
+    "paper": "Out of Library Negative",
+    "type": "unanswerable",
+    "question": "What word error rate (WER) did Whisper achieve on the LibriSpeech test-clean benchmark?",
+    "ground_truth": "REFUSAL: The paper library does not contain information about Whisper.",
+    "target_citation": "REFUSED_CORRECTLY",
+    "verified_quote": "N/A - Out of library negative",
+    "status": "VERIFIED_AGAINST_PDF"
+  }
+]

@@ -1,0 +1,25 @@
+{
+  "status": "NOT_VERIFIED_MISSING_CREDENTIALS",
+  "model_configured": "llama-3.1-8b-instant",
+  "model_returned": null,
+  "probe_successful": false,
+  "error_category": "MISSING_CREDENTIALS",
+  "error_message": "GROQ_API_KEY environment variable is not set. Real provider verification blocked.",
+  "documented_limits": {
+    "rpm": 30,
+    "tpm": 6000,
+    "rpd": 14400,
+    "tpd": 500000
+  },
+  "observed_limits": {
+    "rpm": null,
+    "tpm": null,
+    "rpd": null,
+    "tpd": null,
+    "recovery_window_seconds": null
+  },
+  "latency_ms": null,
+  "tokens_in": null,
+  "tokens_out": null,
+  "raw_headers": {}
+}

@@ -1,0 +1,23 @@
+[project]
+name = "the-relay"
+version = "0.1.0"
+description = "The Relay - Grounded Research Assistant Pipeline & Production Load Benchmarking"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn>=0.30.0",
+    "httpx>=0.27.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "rank-bm25>=0.2.2",
+    "pymupdf>=1.24.0",
+    "numpy>=1.26.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+]
+
