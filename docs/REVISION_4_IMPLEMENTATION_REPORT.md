@@ -3,7 +3,7 @@
 **Date:** 2026-11-11  
 **Repository:** `E:\Ai-projects\vaaniresearch-assignment`  
 **Scope:** P0 benchmark-grading defect, benchmark integrity/reproducibility, focused regression tests, table regeneration, documentation/CI updates.  
-**Final status:** **PASS** (local, measured evidence; live Groq remains explicitly unverified).
+**Final status (point-in-time at Revision 4 commit `862318a`):** **PASS** (local Stand-in evidence; see **Section 9: Post-Push Final Submission Reconciliation** for live Direct Groq verification and GitHub Actions CI run `43091684869` completed afterward).
 
 ---
 
@@ -255,4 +255,15 @@ The external `data/real_groq_probe_results.json` artifact is not used in the rep
 
 **PASS** for the Revision 4 remediation scope, with the explicit limitations above.
 
-The P0 grading defect is fixed and regression-tested; partial answers can no longer be graded correct; empty configuration fails loudly; refusal grading is preserved; the original evidence is archived; a complete 120-row benchmark was rerun and validated; tables and the 2-page report were regenerated with corrected semantics; documentation/CI were updated; and live Groq remains honestly unverified rather than fabricated.
+The P0 grading defect is fixed and regression-tested; partial answers can no longer be graded correct; empty configuration fails loudly; refusal grading is preserved; the original evidence is archived; a complete 120-row benchmark was rerun and validated; tables and the 2-page report were regenerated with corrected semantics; documentation/CI were updated; and live Groq remained unverified at commit `862318a` until the post-push reconciliation below.
+
+---
+
+## 9. Post-push final submission reconciliation
+
+After Revision 4 (`862318a`) was pushed:
+
+1. **GitHub Actions CI verified:** Workflow run `43091684869` (`ubuntu-latest`, Python 3.11) passed all steps on `862318a` (`pytest tests/ -q`, `results.csv` validation, `generate_report_tables.py`).
+2. **Pre-reconciliation probe snapshots preserved:** `data/observed_limits.json` and `data/real_groq_probe_results.json` from Revision 4 were copied unchanged to `data/archive/observed_limits_rev4_pre_reconcile.json` and `data/archive/real_groq_probe_results_rev4_pre_reconcile.json`.
+3. **Provider routing & live verification reconciled:** `benchmarks/probe_groq.py` and `benchmarks/probe_live_pipeline.py` were updated to select `direct_groq` (`https://api.groq.com/openai/v1`, `GROQ_API_KEY`) when `RESPAN_API_KEY` is absent, while preserving optional `respan_gateway` (`https://gateway.respan.ai/v1`). Using the updated local `.env` `GROQ_API_KEY`, live probing verified `qwen/qwen3.8-27b` (`VERIFIED_ONLINE`, `8,000` TPM / `1,000` RPD observed; `rpm`/`tpd` unverified `null`; `5/5` SSE pipeline requests OK).
+4. **Stand-in vs. live separation preserved:** `results.csv` (120 rows) and `data/benchmark_run_metadata.json` remain pure local Stand-in evidence (`llama-3.1-8b-instant` profile). See [`FINAL_SUBMISSION_AUDIT.md`](FINAL_SUBMISSION_AUDIT.md) for the complete post-Revision-4 release audit.

@@ -1,0 +1,25 @@
+{
+  "status": "NOT_VERIFIED_MISSING_CREDENTIALS",
+  "model_configured": "llama-3.1-8b-instant",
+  "model_returned": null,
+  "probe_successful": false,
+  "error_category": "MISSING_CREDENTIALS",
+  "error_message": "No successful authenticated Groq probe was performed, so live limits remain unverified. A provisional local .env key was rejected with HTTP 401; see data/archive/groq_probe_rev4_401.txt and data/archive/observed_limits_probe_failed_20261111T191057Z.json.",
+  "documented_limits": {
+    "rpm": 30,
+    "tpm": 6000,
+    "rpd": 14400,
+    "tpd": 500000
+  },
+  "observed_limits": {
+    "rpm": null,
+    "tpm": null,
+    "rpd": null,
+    "tpd": null,
+    "recovery_window_seconds": null
+  },
+  "latency_ms": null,
+  "tokens_in": null,
+  "tokens_out": null,
+  "raw_headers": {}
+}

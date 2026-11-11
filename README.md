@@ -29,15 +29,17 @@ The-Relay/
 │
 ├── data/
 │   ├── eval_questions.json             # 15 questions with explicit mandatory expected_facts
-│   ├── observed_limits.json            # Live Groq probe status (currently unverified)
-│   ├── benchmark_run_metadata.json     # Run timestamp, code hash, CSV hash, scenario counts
-│   ├── archive/                        # Original results, 401 probe log, run logs, old/new tables
+│   ├── observed_limits.json            # Live Direct Groq probe (VERIFIED_ONLINE for qwen/qwen3.8-27b)
+│   ├── real_groq_probe_results.json    # Controlled 5-query live SSE pipeline verification (direct_groq)
+│   ├── benchmark_run_metadata.json     # Stand-in 120-row run timestamp, hashes, scenario counts
+│   ├── archive/                        # Original results, 401 probe log, pre-reconcile JSONs, logs
 │   ├── raw_papers/                     # Cached exact-version arXiv PDFs
 │   └── processed/                      # Deterministic chunk corpora (Settings 1, 2, 3)
 │
 ├── docs/
-│   ├── THE_RELAY_2_PAGE_REPORT.md      # Final 2-page technical report & corrected tables
-│   ├── REVISION_4_IMPLEMENTATION_REPORT.md  # P0 remediation, evidence, commands, residual risks
+│   ├── THE_RELAY_2_PAGE_REPORT.md      # Final 2-page technical report, live vs. stand-in tables
+│   ├── FINAL_SUBMISSION_AUDIT.md       # Final submission reconciliation & release audit (post-Rev 4)
+│   ├── REVISION_4_IMPLEMENTATION_REPORT.md  # P0 remediation, evidence, reconciliation addendum
 │   ├── IMPLEMENTATION_PLAN.md          # Historical Revision 3 blueprint (superseded)
 │   └── PHASE_2_2_IMPLEMENTATION_REPORT.md   # Historical Phase 2.2 record (superseded)
 │
@@ -46,13 +48,14 @@ The-Relay/
 │   ├── corpus/                         # fetcher.py, parser.py, chunker.py
 │   ├── evaluation/                     # grading.py (strict mandatory-fact & citation grading)
 │   ├── retrieval/                      # bm25_index.py, reranker.py (Hybrid RRF), tool.py
-│   ├── models/                         # base.py, groq_provider.py, standin_service.py (FastAPI SSE)
+│   ├── models/                         # base.py, groq_provider.py, respan_gateway.py, standin_service.py
 │   ├── pipeline/                       # router.py, retriever_step.py, generator_step.py, verifier_step.py, engine.py, state.py
 │   ├── gateway/                        # gateway.py (FIFO + TTL), rate_limiter.py, retry_policy.py, circuit_breaker.py
 │   └── telemetry/                      # recorder.py, validator.py
 │
 ├── benchmarks/
-│   ├── probe_groq.py                   # Minimal live provider header/limit probe
+│   ├── probe_groq.py                   # Minimal live provider header/limit probe (Direct Groq / Respan)
+│   ├── probe_live_pipeline.py          # Controlled 5-query live SSE verification (Direct Groq / Respan)
 │   ├── run_benchmarks.py               # Runs Table 3 retrieval eval + 5 load scenarios -> results.csv
 │   └── generate_report_tables.py       # Recomputes Tables 2a, 2b, 3 and request traces from results.csv
 │
@@ -108,7 +111,7 @@ python benchmarks/generate_report_tables.py
 python -c "from relay.telemetry.validator import validate_results_csv; ok, errs = validate_results_csv('results.csv'); print('valid=', ok); print(errs); raise SystemExit(0 if ok else 1)"
 ```
 
-**Live-provider status:** committed `data/observed_limits.json` remains `NOT_VERIFIED_MISSING_CREDENTIALS` because no successful authenticated probe was verified by this remediation. All reported latency/outcome metrics are **measured on the local stand-in**; real Groq metrics are **not measured**. A provisional `.env` key returned HTTP 401; that failed attempt is preserved under `data/archive/` and is not treated as verification.
+**Live-provider status:** Direct Groq API (`https://api.groq.com/openai/v1`, model `qwen/qwen3.8-27b`) is **`VERIFIED_ONLINE`** in `data/observed_limits.json` and `data/real_groq_probe_results.json` (`8,000` TPM / `1,000` RPD observed from HTTP response headers; `rpm` and `tpd` are not emitted in headers and remain `null`; `5/5` controlled SSE pipeline requests succeeded with `3` `correct`, `1` `refused_correctly` on `Q14`, and `1` `refused_wrongly` on `Q02` due to `"4,000"` + disclaimer wording despite `verified_grounded` + `citation_correct`). `RESPAN_API_KEY` is **not configured**, so `respan_gateway` (`https://gateway.respan.ai/v1`) was not exercised. All 120 rows in `results.csv` (Tables 2a, 2b, and 3) were **measured on the local stand-in** (`llama-3.1-8b-instant` profile: 30 RPM / 6,000 TPM) and remain strictly separated from live Groq measurements; historical pre-reconciliation and HTTP 401 logs are preserved under `data/archive/`.
 
 ---
 
