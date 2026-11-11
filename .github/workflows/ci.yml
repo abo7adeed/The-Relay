@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install package and test dependencies
+        run: python -m pip install -e ".[dev]"
+
+      - name: Run test suite
+        run: python -m pytest tests/ -q
+
+      - name: Validate committed benchmark CSV
+        run: |
+          python - <<'PY'
+          import csv
+          from relay.telemetry.validator import (
+              validate_expected_scenarios,
+              validate_results_csv,
+          )
+
+          ok, errors = validate_results_csv("results.csv")
+          with open("results.csv", encoding="utf-8", newline="") as handle:
+              rows = list(csv.DictReader(handle))
+          complete, completeness_errors = validate_expected_scenarios(rows)
+          if not ok or not complete:
+              raise SystemExit(
+                  f"CSV validation failed: schema={errors[:5]} "
+                  f"completeness={completeness_errors[:5]}"
+              )
+          print(f"results.csv valid: {len(rows)} rows, no duplicate IDs, "
+                "complete scenario matrix, latency conservation within 15 ms")
+          PY
+
+      - name: Recompute report tables
+        run: python benchmarks/generate_report_tables.py

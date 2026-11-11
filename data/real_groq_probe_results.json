@@ -1,0 +1,117 @@
+[
+  {
+    "qid": "Q01",
+    "request_id": "6d08d2a9-5ef2-4b1d-bf63-4e80fa3e4cc7",
+    "scenario": "real_steady",
+    "source": "real",
+    "start_time": "2026-11-11T19:02:05.333245+00:00",
+    "first_token_ms": 713.655,
+    "model_first_token_ms": 644.554,
+    "total_ms": 713.655,
+    "working_ms": 713.643,
+    "status": "ok",
+    "tokens_in": 1417,
+    "tokens_out": 39,
+    "verification_status": "verified_grounded",
+    "headers": {
+      "x-ratelimit-limit-requests": "1000",
+      "x-ratelimit-limit-tokens": "8000",
+      "x-ratelimit-remaining-requests": "988",
+      "x-ratelimit-remaining-tokens": "6451",
+      "x-ratelimit-reset-requests": "17m16.8s",
+      "x-ratelimit-reset-tokens": "11.617s"
+    }
+  },
+  {
+    "qid": "Q02",
+    "request_id": "c2f7cc71-61f5-4409-8a08-0f2688ece901",
+    "scenario": "real_steady",
+    "source": "real",
+    "start_time": "2026-11-11T19:02:17.052928+00:00",
+    "first_token_ms": 1018.336,
+    "model_first_token_ms": 536.741,
+    "total_ms": 1018.336,
+    "working_ms": 1018.324,
+    "status": "ok",
+    "tokens_in": 1211,
+    "tokens_out": 220,
+    "verification_status": "verified_grounded",
+    "headers": {
+      "x-ratelimit-limit-requests": "1000",
+      "x-ratelimit-limit-tokens": "8000",
+      "x-ratelimit-remaining-requests": "987",
+      "x-ratelimit-remaining-tokens": "6507",
+      "x-ratelimit-reset-requests": "18m43.2s",
+      "x-ratelimit-reset-tokens": "13.2s"
+    }
+  },
+  {
+    "qid": "Q04",
+    "request_id": "a644670f-c72f-419e-bfc1-309067ada4be",
+    "scenario": "real_steady",
+    "source": "real",
+    "start_time": "2026-11-11T19:02:29.084602+00:00",
+    "first_token_ms": 604.154,
+    "model_first_token_ms": 420.013,
+    "total_ms": 604.154,
+    "working_ms": 604.128,
+    "status": "ok",
+    "tokens_in": 725,
+    "tokens_out": 84,
+    "verification_status": "verified_grounded",
+    "headers": {
+      "x-ratelimit-limit-requests": "1000",
+      "x-ratelimit-limit-tokens": "8000",
+      "x-ratelimit-remaining-requests": "986",
+      "x-ratelimit-remaining-tokens": "7033",
+      "x-ratelimit-reset-requests": "20m9.6s",
+      "x-ratelimit-reset-tokens": "14.52s"
+    }
+  },
+  {
+    "qid": "Q08",
+    "request_id": "7905255a-38d4-4bfc-8d0c-2313b9bff150",
+    "scenario": "real_steady",
+    "source": "real",
+    "start_time": "2026-11-11T19:02:40.693304+00:00",
+    "first_token_ms": 578.88,
+    "model_first_token_ms": 357.22,
+    "total_ms": 578.88,
+    "working_ms": 578.866,
+    "status": "ok",
+    "tokens_in": 1348,
+    "tokens_out": 107,
+    "verification_status": "verified_grounded",
+    "headers": {
+      "x-ratelimit-limit-requests": "1000",
+      "x-ratelimit-limit-tokens": "8000",
+      "x-ratelimit-remaining-requests": "985",
+      "x-ratelimit-remaining-tokens": "6400",
+      "x-ratelimit-reset-requests": "21m36s",
+      "x-ratelimit-reset-tokens": "12s"
+    }
+  },
+  {
+    "qid": "Q14",
+    "request_id": "52876040-369e-460f-9648-4a4c573e198e",
+    "scenario": "real_steady",
+    "source": "real",
+    "start_time": "2026-11-11T19:02:52.273553+00:00",
+    "first_token_ms": 483.291,
+    "model_first_token_ms": 454.271,
+    "total_ms": 483.291,
+    "working_ms": 483.276,
+    "status": "ok",
+    "tokens_in": 1669,
+    "tokens_out": 14,
+    "verification_status": "verified_refusal",
+    "headers": {
+      "x-ratelimit-limit-requests": "1000",
+      "x-ratelimit-limit-tokens": "8000",
+      "x-ratelimit-remaining-requests": "984",
+      "x-ratelimit-remaining-tokens": "6079",
+      "x-ratelimit-reset-requests": "23m2.4s",
+      "x-ratelimit-reset-tokens": "14.407s"
+    }
+  }
+]

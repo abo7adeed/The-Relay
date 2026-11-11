@@ -1,0 +1,4 @@
+2026-11-11 21:08:48,846 [INFO] GROQ_API_KEY found. Executing minimal live probe on qwen/qwen3.8-27b...
+2026-11-11 21:08:50,190 [INFO] HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-11-11 21:08:50,193 [ERROR] Groq probe failed: Provider returned error status 401: {"error":{"message":"Invalid API Key","type":"invalid_request_error","code":"invalid_api_key"}}
+

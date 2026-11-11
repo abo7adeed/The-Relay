@@ -4,10 +4,10 @@ import asyncio
 import time
 from typing import Optional, List, Tuple
 
-from src.relay.gateway.circuit_breaker import CircuitBreaker
-from src.relay.gateway.rate_limiter import LocalRateLimiter
-from src.relay.pipeline.engine import PipelineEngine
-from src.relay.pipeline.state import RequestContext, PipelineResult
+from relay.gateway.circuit_breaker import CircuitBreaker
+from relay.gateway.rate_limiter import LocalRateLimiter
+from relay.pipeline.engine import PipelineEngine
+from relay.pipeline.state import RequestContext, PipelineResult
 
 
 class AdmissionGateway:

@@ -8,11 +8,11 @@ Validates that:
 
 import time
 import pytest
-from src.relay.pipeline.state import RequestContext
-from src.relay.pipeline.engine import PipelineEngine
-from src.relay.retrieval.tool import RetrievalTool
-from src.relay.retrieval.bm25_index import BM25Index
-from src.relay.models.base import LLMProvider, ModelResponse, StreamChunk
+from relay.pipeline.state import RequestContext
+from relay.pipeline.engine import PipelineEngine
+from relay.retrieval.tool import RetrievalTool
+from relay.retrieval.bm25_index import BM25Index
+from relay.models.base import LLMProvider, ModelResponse, StreamChunk
 from typing import List, Dict, AsyncGenerator
 
 
@@ -36,7 +36,7 @@ class MockLLMProvider(LLMProvider):
         yield StreamChunk(delta_content="Mock", finish_reason="stop")
 
     def get_limits(self):
-        from src.relay.models.base import ProviderLimits
+        from relay.models.base import ProviderLimits
         return ProviderLimits(model_id="mock-llm")
 
 

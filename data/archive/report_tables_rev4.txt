@@ -1,0 +1,66 @@
+Total rows in results.csv: 120
+
+=== TABLE 2a: Latency ===
+steady            | stand-in | N= 4 | dur= 48.6s | rate=   5.0/m | FT p50/p95/p99=563.0/825.8/856.6 | TOT p50/p95/p99=563.0/825.8/856.6
+burst             | stand-in | N=20 | dur=  1.8s | rate=2021.9/m | FT p50/p95/p99=1259.8/1517.1/1610.1 | TOT p50/p95/p99=1259.8/1517.1/1610.1
+overload          | stand-in | N=24 | dur=  3.6s | rate= 400.5/m | FT p50/p95/p99=1240.7/1863.4/1993.2 | TOT p50/p95/p99=1240.7/1863.4/1993.2
+limit_halved      | stand-in | N=12 | dur= 22.1s | rate=  32.6/m | FT p50/p95/p99=10.0/3028.6/3033.5 | TOT p50/p95/p99=10.0/3028.6/3033.5
+budget_exhausted  | stand-in | N=15 | dur=  0.9s | rate=1033.2/m | FT p50/p95/p99=0.1/2.0/5.3 | TOT p50/p95/p99=0.1/2.0/5.3
+
+=== TABLE 2b: Outcomes ===
+steady            | ok=100.0% | 429=  0.0% | to=  0.0% | retries=0.00 | peakQ= 1 | tok/ans= 978.0 | $/1k=$0.0500
+burst             | ok= 25.0% | 429= 75.0% | to=  0.0% | retries=0.00 | peakQ=18 | tok/ans=1118.2 | $/1k=$0.0570
+overload          | ok= 20.8% | 429= 33.3% | to= 45.8% | retries=0.00 | peakQ=10 | tok/ans=1101.6 | $/1k=$0.0563
+limit_halved      | ok= 16.7% | 429= 83.3% | to=  0.0% | retries=0.17 | peakQ= 1 | tok/ans=1209.0 | $/1k=$0.0616
+budget_exhausted  | ok=  0.0% | 429=100.0% | to=  0.0% | retries=0.00 | peakQ= 1 | tok/ans=   0.0 | $/1k=$0.0000
+
+=== TABLE 3: Retrieval Settings ===
+350w / 50o, k=4, rerank=No     | N=15 | facts= 53.3% | cite_ok= 63.6% | facts+cite= 33.3% | wrong=13.3% | ref_ok= 26.7% | ref_wrong= 6.7% | tok/ans=1900.3 | FT p50/p95=549.8/805.0 | TOT p50/p95=549.8/805.0
+175w / 25o, k=6, rerank=No     | N=15 | facts= 46.7% | cite_ok= 63.6% | facts+cite= 33.3% | wrong=13.3% | ref_ok= 26.7% | ref_wrong=13.3% | tok/ans=1789.4 | FT p50/p95=561.6/703.2 | TOT p50/p95=561.6/703.2
+350w / 50o, k=8->3, rerank=Yes | N=15 | facts= 53.3% | cite_ok= 54.5% | facts+cite= 33.3% | wrong=13.3% | ref_ok= 26.7% | ref_wrong= 6.7% | tok/ans=1373.1 | FT p50/p95=620.1/789.1 | TOT p50/p95=620.1/789.1
+
+=== SLOW SUCCESSFUL REQUEST TRACE (Heading 4) ===
+{
+  "request_id": "166c3b75-a796-4028-85fd-f5ea08cc0cce",
+  "scenario": "overload",
+  "source": "stand-in",
+  "start_time": "2026-11-11T19:06:36.709675+00:00",
+  "first_token_ms": "2028.723",
+  "total_ms": "2028.723",
+  "status": "ok",
+  "retries": "0",
+  "tokens_in": "1088",
+  "tokens_out": "61",
+  "retrieval_setting": "setting_3_hybrid_rerank",
+  "answer_grade": "correct",
+  "citation_grade": "citation_not_applicable",
+  "queue_wait_ms": "1072.409",
+  "working_ms": "956.307",
+  "retry_wait_ms": "0.0",
+  "model_first_token_ms": "1415.538",
+  "verification_status": "verified_grounded",
+  "peak_queue_length": "10"
+}
+
+=== RETRY-WORSENED REQUEST TRACE (Heading 6) ===
+{
+  "request_id": "1fbd20ef-4190-40d0-9df9-c6ef438ae6cd",
+  "scenario": "limit_halved",
+  "source": "stand-in",
+  "start_time": "2026-11-11T19:06:44.065193+00:00",
+  "first_token_ms": "3034.699",
+  "total_ms": "3034.699",
+  "status": "rate_limited",
+  "retries": "1",
+  "tokens_in": "0",
+  "tokens_out": "0",
+  "retrieval_setting": "setting_3_hybrid_rerank",
+  "answer_grade": "refused_wrongly",
+  "citation_grade": "citation_not_applicable",
+  "queue_wait_ms": "0.267",
+  "working_ms": "25.315",
+  "retry_wait_ms": "3009.069",
+  "model_first_token_ms": "0.0",
+  "verification_status": "verifier_error",
+  "peak_queue_length": "1"
+}

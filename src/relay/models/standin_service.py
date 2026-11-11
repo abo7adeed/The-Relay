@@ -1,11 +1,13 @@
 """Stand-in controllable model service implementing Groq/OpenAI-compatible REST and SSE endpoints."""
 
 import asyncio
+import copy
 import json
 import math
 import random
 import re
 import time
+from dataclasses import dataclass, field
 from typing import AsyncGenerator, Dict, List, Optional, Tuple, Any
 from fastapi import FastAPI, Response
 from fastapi.responses import StreamingResponse
@@ -27,6 +29,7 @@ class ChatCompletionRequest(BaseModel):
     stream: bool = False
 
 
+@dataclass
 class StandInConfig:
     """Configurable simulation parameters calibrated to Groq LPU free-tier behavior."""
     # Latency distribution: Log-normal parameters (calibrated to median ~250ms TTFT)
@@ -45,8 +48,8 @@ class StandInConfig:
     daily_token_limit: int = 500_000
 
     # Sliding window counters
-    request_window: List[float] = []
-    token_window: List[Tuple[float, int]] = []
+    request_window: List[float] = field(default_factory=list)
+    token_window: List[Tuple[float, int]] = field(default_factory=list)
     cumulative_daily_tokens: int = 0
 
     # Fault & scenario injection
@@ -54,6 +57,12 @@ class StandInConfig:
     force_daily_exhaustion: bool = False
     rpm_override: Optional[int] = None
     tpm_override: Optional[int] = None
+
+    def reset(self) -> None:
+        """Restore every field to its default in place, preserving object identity."""
+        defaults = StandInConfig()
+        for name in self.__dataclass_fields__:
+            setattr(self, name, copy.deepcopy(getattr(defaults, name)))
 
 
 config = StandInConfig()
@@ -349,14 +358,7 @@ def health():
 
 @app.post("/admin/reset")
 def reset_counters():
-    config.request_window.clear()
-    config.token_window.clear()
-    config.cumulative_daily_tokens = 0
-    config.active_requests = 0
-    config.force_daily_exhaustion = False
-    config.rpm_override = None
-    config.tpm_override = None
-    config.fault_probability = 0.0
+    config.reset()
     return {"status": "reset_successful"}
 
 

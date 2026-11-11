@@ -2,10 +2,10 @@
 
 import time
 from typing import List, Tuple, Optional
-from src.relay.gateway.retry_policy import RetryPolicy
-from src.relay.models.base import LLMProvider, ModelResponse
-from src.relay.pipeline.state import RequestContext
-from src.relay.retrieval.tool import RetrievedPassage
+from relay.gateway.retry_policy import RetryPolicy
+from relay.models.base import LLMProvider, ModelResponse
+from relay.pipeline.state import RequestContext
+from relay.retrieval.tool import RetrievedPassage
 
 
 SYSTEM_PROMPT = """You are a rigorous technical research assistant answering questions exclusively from the provided paper library.

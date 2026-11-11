@@ -4,7 +4,7 @@
   "model_returned": null,
   "probe_successful": false,
   "error_category": "MISSING_CREDENTIALS",
-  "error_message": "GROQ_API_KEY environment variable is not set. Real provider verification blocked.",
+  "error_message": "No successful authenticated Groq probe was performed, so live limits remain unverified. A provisional local .env key was rejected with HTTP 401; see data/archive/groq_probe_rev4_401.txt and data/archive/observed_limits_probe_failed_20261111T191057Z.json.",
   "documented_limits": {
     "rpm": 30,
     "tpm": 6000,

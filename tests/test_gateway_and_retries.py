@@ -4,16 +4,16 @@ import asyncio
 import pytest
 from typing import AsyncGenerator
 
-from src.relay.gateway.circuit_breaker import CircuitBreaker
-from src.relay.gateway.gateway import AdmissionGateway
-from src.relay.gateway.rate_limiter import LocalRateLimiter
-from src.relay.gateway.retry_policy import RetryPolicy
-from src.relay.models.base import LLMProvider, ModelResponse, StreamChunk, ProviderLimits
-from src.relay.models.groq_provider import GroqProviderError
-from src.relay.pipeline.engine import PipelineEngine
-from src.relay.pipeline.state import RequestContext
-from src.relay.retrieval.bm25_index import BM25Index
-from src.relay.retrieval.tool import RetrievalTool
+from relay.gateway.circuit_breaker import CircuitBreaker
+from relay.gateway.gateway import AdmissionGateway
+from relay.gateway.rate_limiter import LocalRateLimiter
+from relay.gateway.retry_policy import RetryPolicy
+from relay.models.base import LLMProvider, ModelResponse, StreamChunk, ProviderLimits
+from relay.models.groq_provider import GroqProviderError
+from relay.pipeline.engine import PipelineEngine
+from relay.pipeline.state import RequestContext
+from relay.retrieval.bm25_index import BM25Index
+from relay.retrieval.tool import RetrievalTool
 
 
 class FlakyProvider(LLMProvider):
@@ -96,6 +96,26 @@ async def test_retry_policy_accounting_and_no_daily_retry():
     assert res2.retries == 0
     assert provider_daily.calls == 1
     assert breaker_daily.is_open() is True
+
+
+@pytest.mark.asyncio
+async def test_retry_policy_max_attempts_is_total_attempts_not_retries():
+    tool = _build_attention_tool()
+    provider = FlakyProvider(fail_first_n=99, delay_s=0.005)
+    retry_pol = RetryPolicy(
+        max_attempts=2,
+        retry_budget_pct=100.0,
+        backoff_base_s=0.001,
+        circuit_breaker=CircuitBreaker(),
+    )
+    engine = PipelineEngine(tool, provider, retry_policy=retry_pol)
+
+    ctx = RequestContext(query="warmup steps 4000?", ttl_seconds=5.0)
+    res = await engine.process_request(ctx)
+
+    assert res.status == "rate_limited"
+    assert provider.calls == 2, "max_attempts=2 must mean two total calls, not three"
+    assert res.retries == 1
 
 
 @pytest.mark.asyncio

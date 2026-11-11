@@ -1,0 +1,32 @@
+{
+  "status": "VERIFIED_ONLINE",
+  "model_configured": "qwen/qwen3.8-27b",
+  "model_returned": "qwen/qwen3.8-27b",
+  "probe_successful": true,
+  "error_category": null,
+  "error_message": null,
+  "documented_limits": {
+    "note": "Account limits inspected via live /openai/v1/models and rate-limit headers; llama-3.1-8b-instant returned 404 model_not_found on this account.",
+    "tpm": 8000,
+    "rpd": 1000
+  },
+  "observed_limits": {
+    "rpm": null,
+    "tpm": 8000,
+    "rpd": 1000,
+    "tpd": null,
+    "reset_requests": "2m52.8s",
+    "reset_tokens": "329ms"
+  },
+  "latency_ms": 697.2,
+  "tokens_in": 34,
+  "tokens_out": 2,
+  "raw_headers": {
+    "x-ratelimit-limit-requests": "1000",
+    "x-ratelimit-limit-tokens": "8000",
+    "x-ratelimit-remaining-requests": "998",
+    "x-ratelimit-remaining-tokens": "7956",
+    "x-ratelimit-reset-requests": "2m52.8s",
+    "x-ratelimit-reset-tokens": "329ms"
+  }
+}

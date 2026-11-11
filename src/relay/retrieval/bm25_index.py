@@ -46,6 +46,8 @@ class BM25Index:
         """
         if not self.bm25 or not self.chunks:
             return []
+        if top_k <= 0:
+            return []
 
         query_tokens = tokenize(query)
         if not query_tokens:

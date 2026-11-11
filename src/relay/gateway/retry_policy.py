@@ -5,9 +5,9 @@ import random
 import time
 from typing import Awaitable, Callable, TypeVar
 
-from src.relay.gateway.circuit_breaker import CircuitBreaker
-from src.relay.models.groq_provider import GroqProviderError
-from src.relay.pipeline.state import RequestContext
+from relay.gateway.circuit_breaker import CircuitBreaker
+from relay.models.groq_provider import GroqProviderError
+from relay.pipeline.state import RequestContext
 
 T = TypeVar("T")
 
@@ -46,7 +46,7 @@ class RetryPolicy:
     ) -> T:
         """Invoke fn() with deadline checks and isolated retry_wait_ms sleep accounting."""
         self.total_primary_calls += 1
-        attempt = 0
+        attempt = 1
 
         while True:
             if ctx.is_expired():

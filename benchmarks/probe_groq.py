@@ -3,10 +3,13 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath("."))
+sys.path.insert(0, os.path.abspath("src"))
 import json
 import asyncio
 import logging
-from src.relay.models.groq_provider import GroqProvider, GroqProviderError, DEFAULT_GROQ_MODEL
+from relay.config import PipelineConfig
+from relay.models.groq_provider import GroqProviderError, DEFAULT_GROQ_MODEL
+from relay.models.respan_gateway import build_gateway_provider
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("probe_groq")
@@ -14,17 +17,18 @@ logger = logging.getLogger("probe_groq")
 
 async def run_probe(output_file: str = "data/observed_limits.json") -> dict:
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
-    api_key = os.getenv("GROQ_API_KEY", "").strip()
+    cfg = PipelineConfig()
+    api_key = (os.getenv("RESPAN_API_KEY") or cfg.respan_api_key or "").strip()
 
     if not api_key:
-        logger.warning("GROQ_API_KEY environment variable is NOT set.")
+        logger.warning("RESPAN_API_KEY environment variable is NOT set.")
         result = {
             "status": "NOT_VERIFIED_MISSING_CREDENTIALS",
             "model_configured": DEFAULT_GROQ_MODEL,
             "model_returned": None,
             "probe_successful": False,
             "error_category": "MISSING_CREDENTIALS",
-            "error_message": "GROQ_API_KEY environment variable is not set. Real provider verification blocked.",
+            "error_message": "RESPAN_API_KEY environment variable is not set. Respan gateway verification blocked.",
             "documented_limits": {
                 "rpm": 30,
                 "tpm": 6000,
@@ -47,13 +51,13 @@ async def run_probe(output_file: str = "data/observed_limits.json") -> dict:
             json.dump(result, f, indent=2)
         print("\n" + "=" * 60)
         print("GROQ PROBE RESULT: NOT VERIFIED")
-        print("Blocker: GROQ_API_KEY is not set.")
+        print("Blocker: RESPAN_API_KEY is not set.")
         print(f"Recorded status to {output_file}")
         print("=" * 60 + "\n")
         return result
 
-    logger.info("GROQ_API_KEY found. Executing minimal live probe on %s...", DEFAULT_GROQ_MODEL)
-    provider = GroqProvider(api_key=api_key, model_id=DEFAULT_GROQ_MODEL)
+    logger.info("RESPAN_API_KEY found. Executing minimal live probe on %s via the Respan gateway...", DEFAULT_GROQ_MODEL)
+    provider = build_gateway_provider(model_id=DEFAULT_GROQ_MODEL, api_key=api_key)
 
     try:
         resp = await provider.generate(
@@ -66,8 +70,8 @@ async def run_probe(output_file: str = "data/observed_limits.json") -> dict:
         )
 
         headers = resp.raw_headers
-        rpm_observed = int(headers.get("x-ratelimit-limit-requests", 30)) if "x-ratelimit-limit-requests" in headers else None
-        tpm_observed = int(headers.get("x-ratelimit-limit-tokens", 6000)) if "x-ratelimit-limit-tokens" in headers else None
+        rpd_observed = int(headers["x-ratelimit-limit-requests"]) if "x-ratelimit-limit-requests" in headers else None
+        tpm_observed = int(headers["x-ratelimit-limit-tokens"]) if "x-ratelimit-limit-tokens" in headers else None
 
         result = {
             "status": "VERIFIED_ONLINE",
@@ -77,17 +81,17 @@ async def run_probe(output_file: str = "data/observed_limits.json") -> dict:
             "error_category": None,
             "error_message": None,
             "documented_limits": {
-                "rpm": 30,
-                "tpm": 6000,
-                "rpd": 14400,
-                "tpd": 500000,
+                "note": "Account limits inspected via live /openai/v1/models and rate-limit headers; llama-3.1-8b-instant returned 404 model_not_found on this account.",
+                "tpm": 8000,
+                "rpd": 1000,
             },
             "observed_limits": {
-                "rpm": rpm_observed,
+                "rpm": None,
                 "tpm": tpm_observed,
-                "rpd": None,
+                "rpd": rpd_observed,
                 "tpd": None,
-                "recovery_window_seconds": None,
+                "reset_requests": headers.get("x-ratelimit-reset-requests"),
+                "reset_tokens": headers.get("x-ratelimit-reset-tokens"),
             },
             "latency_ms": round(resp.total_ms, 2),
             "tokens_in": resp.tokens_in,
@@ -103,7 +107,7 @@ async def run_probe(output_file: str = "data/observed_limits.json") -> dict:
         print(f"Model: {resp.model_id}")
         print(f"Latency: {resp.total_ms:.2f} ms")
         print(f"Tokens in/out: {resp.tokens_in} / {resp.tokens_out}")
-        print(f"Observed RPM: {rpm_observed}, TPM: {tpm_observed}")
+        print(f"Observed RPD: {rpd_observed}, TPM: {tpm_observed}")
         print(f"Recorded status to {output_file}")
         print("=" * 60 + "\n")
         return result

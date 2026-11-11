@@ -2,8 +2,8 @@
 
 from dataclasses import dataclass
 from typing import List, Dict, Any, Optional
-from src.relay.retrieval.bm25_index import BM25Index
-from src.relay.retrieval.reranker import HybridReranker
+from relay.retrieval.bm25_index import BM25Index
+from relay.retrieval.reranker import HybridReranker
 
 
 @dataclass

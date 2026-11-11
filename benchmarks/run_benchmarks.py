@@ -1,38 +1,56 @@
 """Executable benchmark harness running Retrieval Settings (Table 3) and Load Scenarios (Tables 2a/2b)."""
 
 import asyncio
+from collections import Counter
 from datetime import datetime, timezone
+import hashlib
 import json
 import logging
 import os
+import platform
+import shutil
+import subprocess
 import sys
 import threading
 import time
+from pathlib import Path
 from typing import Dict, Any, List, Tuple
 
 sys.path.insert(0, os.path.abspath("."))
+sys.path.insert(0, os.path.abspath("src"))
 
 import httpx
 import uvicorn
 
-from src.relay.gateway.circuit_breaker import CircuitBreaker
-from src.relay.gateway.gateway import AdmissionGateway
-from src.relay.gateway.rate_limiter import LocalRateLimiter
-from src.relay.gateway.retry_policy import RetryPolicy
-from src.relay.models.groq_provider import GroqProvider
-from src.relay.models.standin_service import app as standin_app
-from src.relay.pipeline.engine import PipelineEngine
-from src.relay.pipeline.state import RequestContext
-from src.relay.retrieval.bm25_index import BM25Index
-from src.relay.retrieval.tool import RetrievalTool
-from src.relay.telemetry.recorder import TelemetryRecorder
-from src.relay.telemetry.validator import validate_results_csv
+from relay.evaluation.grading import grade_citation, grade_eval_answer
+from relay.gateway.circuit_breaker import CircuitBreaker
+from relay.gateway.gateway import AdmissionGateway
+from relay.gateway.rate_limiter import LocalRateLimiter
+from relay.gateway.retry_policy import RetryPolicy
+from relay.models.groq_provider import GroqProvider
+from relay.models.standin_service import app as standin_app
+from relay.pipeline.engine import PipelineEngine
+from relay.pipeline.state import RequestContext
+from relay.retrieval.bm25_index import BM25Index
+from relay.retrieval.tool import RetrievalTool
+from relay.telemetry.recorder import TelemetryRecorder
+from relay.telemetry.validator import (
+    EXPECTED_SCENARIO_COUNTS,
+    validate_expected_scenarios,
+    validate_results_csv,
+)
 
 logging.basicConfig(level=logging.WARNING, format="%(asctime)s [%(levelname)s] %(message)s")
 
 STANDIN_HOST = "127.0.0.1"
 STANDIN_PORT = 8765
 STANDIN_BASE_URL = f"http://{STANDIN_HOST}:{STANDIN_PORT}"
+
+RESULTS_PATH = "results.csv"
+PENDING_RESULTS_PATH = "results.pending.csv"
+ARCHIVE_DIR = "data/archive"
+METADATA_PATH = "data/benchmark_run_metadata.json"
+EVAL_QUESTIONS_PATH = "data/eval_questions.json"
 
 
 def start_standin_server() -> uvicorn.Server:
@@ -53,47 +71,96 @@ def start_standin_server() -> uvicorn.Server:
     raise RuntimeError("Failed to start local StandInService uvicorn server.")
 
 
-def grade_eval_answer(q: Dict[str, Any], response_text: str, verification_status: str) -> str:
-    """Strictly grade a benchmark response against eval_questions.json ground truth."""
-    qtype = q["type"]
-    resp_l = response_text.lower()
-    is_refusal = (
-        verification_status == "verified_refusal"
-        or "do not state" in resp_l
-        or "does not state" in resp_l
-        or "unable to verify" in resp_l
-    )
+def _sha256(path: str) -> str:
+    digest = hashlib.sha256()
+    with open(path, "rb") as f:
+        for block in iter(lambda: f.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
 
-    if qtype in ("false_friend", "unanswerable"):
-        return "refused_correctly" if is_refusal else "wrong"
 
-    if is_refusal or verification_status != "verified_grounded":
-        return "refused_wrongly"
+def archive_existing_results(
+    results_path: str = RESULTS_PATH,
+    archive_dir: str = ARCHIVE_DIR,
+) -> Tuple[str | None, str | None]:
+    """Preserve the previous results.csv before a new run replaces it."""
+    if not os.path.exists(results_path):
+        return None, None
 
-    expected_facts = {
-        "Q01": ["0.1"],
-        "Q02": ["4000"],
-        "Q03": ["0.1"],
-        "Q04": ["64"],
-        "Q05": ["1.1", "12.5"],
-        "Q06": ["160", "80"],
-        "Q07": ["2048"],
-        "Q08": ["160", "200"],
-        "Q09": ["4x", "3.6x"],
-        "Q10": ["cosine similarity"],
-        "Q11": ["chinese", "dna"],
+    os.makedirs(archive_dir, exist_ok=True)
+    original_hash = _sha256(results_path)
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    destination = os.path.join(archive_dir, f"results_{stamp}.csv")
+    suffix = 1
+    while os.path.exists(destination):
+        destination = os.path.join(archive_dir, f"results_{stamp}_{suffix}.csv")
+        suffix += 1
+    shutil.copy2(results_path, destination)
+    return destination, original_hash
+
+
+def _git_commit() -> str | None:
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], text=True, stderr=subprocess.DEVNULL
+        ).strip()
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
+def write_run_metadata(
+    results_path: str,
+    rows: List[Dict[str, Any]],
+    archived_path: str | None,
+    archived_sha256: str | None,
+    started_at: str,
+) -> str:
+    """Record reproducibility metadata next to the validated CSV."""
+    scenario_counts = Counter(r["scenario"] for r in rows)
+    grade_counts = Counter(r["answer_grade"] for r in rows)
+    citation_counts = Counter(r["citation_grade"] for r in rows)
+
+    groq_status = None
+    if os.path.exists("data/observed_limits.json"):
+        with open("data/observed_limits.json", "r", encoding="utf-8") as f:
+            groq_status = json.load(f).get("status")
+
+    metadata = {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "benchmark_started_at": started_at,
+        "git_commit": _git_commit(),
+        "python_version": platform.python_version(),
+        "benchmark_script": {
+            "path": "benchmarks/run_benchmarks.py",
+            "sha256": _sha256("benchmarks/run_benchmarks.py"),
+        },
+        "eval_questions": {
+            "path": EVAL_QUESTIONS_PATH,
+            "sha256": _sha256(EVAL_QUESTIONS_PATH),
+        },
+        "results_csv": {
+            "path": results_path,
+            "sha256": _sha256(results_path),
+            "rows": len(rows),
+        },
+        "scenario_counts": dict(sorted(scenario_counts.items())),
+        "answer_grade_counts": dict(sorted(grade_counts.items())),
+        "citation_grade_counts": dict(sorted(citation_counts.items())),
+        "archived_previous_results": archived_path,
+        "archived_previous_sha256": archived_sha256,
+        "groq_status": groq_status,
+        "execution_mode": "stand-in HTTP/SSE; real Groq not measured",
     }
-    keys = expected_facts.get(q["id"], [])
-    if all(k in resp_l for k in keys):
-        return "correct"
-    if any(k in resp_l for k in keys):
-        return "correct"
-    return "wrong"
+    tmp_path = f"{METADATA_PATH}.tmp"
+    with open(tmp_path, "w", encoding="utf-8") as f:
+        json.dump(metadata, f, indent=2)
+    os.replace(tmp_path, METADATA_PATH)
+    return METADATA_PATH
 
 
 async def run_retrieval_evaluations(recorder: TelemetryRecorder) -> None:
     """Run Settings 1, 2, and 3 across all 15 audited questions over HTTP SSE streaming."""
-    with open("data/eval_questions.json", "r", encoding="utf-8") as f:
+    with open(EVAL_QUESTIONS_PATH, "r", encoding="utf-8") as f:
         eval_questions = json.load(f)
 
     idx_350 = BM25Index.from_json_file("data/processed/chunks_setting_1.json")
@@ -133,7 +200,14 @@ async def run_retrieval_evaluations(recorder: TelemetryRecorder) -> None:
                 )
                 res = await engine.process_request(ctx)
                 grade = grade_eval_answer(q, res.response_text, res.verification_status)
-                recorder.add_result(res, start_time_iso=start_iso, answer_grade_override=grade, peak_queue_length=0)
+                citation_grade = grade_citation(q, res.citations)
+                recorder.add_result(
+                    res,
+                    start_time_iso=start_iso,
+                    answer_grade_override=grade,
+                    citation_grade_override=citation_grade,
+                    peak_queue_length=0,
+                )
 
 
 async def run_load_scenario(
@@ -206,11 +280,18 @@ async def run_load_scenario(
                 if interval_s > 0 and i < len(queries) - 1:
                     await asyncio.sleep(interval_s)
 
-            results = await asyncio.gather(*(t for _, t in tasks))
+            results = await asyncio.gather(*(t for _, t in tasks), return_exceptions=True)
+            failures = [r for r in results if isinstance(r, BaseException)]
+            if failures:
+                raise RuntimeError(
+                    f"Scenario {scenario!r} had {len(failures)} failed request task(s); "
+                    f"first failure: {failures[0]!r}"
+                )
             for (start_iso, _), res in zip(tasks, results):
                 recorder.add_result(
                     res,
                     start_time_iso=start_iso,
+                    citation_grade_override="citation_not_applicable",
                     peak_queue_length=gateway.peak_queue_length,
                 )
         finally:
@@ -218,14 +299,16 @@ async def run_load_scenario(
 
 
 async def main() -> None:
+    started_at = datetime.now(timezone.utc).isoformat()
     server = start_standin_server()
     try:
-        with open("data/eval_questions.json", "r", encoding="utf-8") as f:
+        with open(EVAL_QUESTIONS_PATH, "r", encoding="utf-8") as f:
             eval_questions = json.load(f)
         # Focus load mix on answerable questions to realistically stress token throughput
         sample_queries = [q["question"] for q in eval_questions[:11]]
 
-        recorder = TelemetryRecorder(output_path="results.csv", overwrite=True)
+        # Pending output is validated first; results.csv is only replaced afterwards.
+        recorder = TelemetryRecorder(output_path=PENDING_RESULTS_PATH, overwrite=True)
 
         # 1. Retrieval Settings Evaluation (Table 3: Settings 1, 2, 3)
         await run_retrieval_evaluations(recorder)
@@ -272,17 +355,38 @@ async def main() -> None:
             force_daily=True,
         )
 
-        out_csv = recorder.save()
-        ok, errs = validate_results_csv(out_csv)
-        print(f"\nSaved {len(recorder.rows)} rows to {out_csv}. Validation passed: {ok}")
+        complete, completeness_errors = validate_expected_scenarios(recorder.rows)
+        if not complete:
+            recorder.save(PENDING_RESULTS_PATH)
+            print(f"\nBenchmark completeness validation FAILED. Partial rows saved to {PENDING_RESULTS_PATH}.")
+            for e in completeness_errors[:10]:
+                print("  COMPLETENESS ERROR:", e)
+            sys.exit(1)
+
+        recorder.save(PENDING_RESULTS_PATH)
+        ok, errs = validate_results_csv(PENDING_RESULTS_PATH)
         if not ok:
+            print(f"\nPending results failed CSV validation; {RESULTS_PATH} was not replaced.")
             for e in errs[:10]:
                 print("  VALIDATION ERROR:", e)
             sys.exit(1)
+
+        archived_path, archived_hash = archive_existing_results(RESULTS_PATH)
+        os.replace(PENDING_RESULTS_PATH, RESULTS_PATH)
+        metadata_path = write_run_metadata(
+            RESULTS_PATH, recorder.rows, archived_path, archived_hash, started_at
+        )
+
+        scenario_counts = Counter(r["scenario"] for r in recorder.rows)
+        print(f"\nSaved {len(recorder.rows)} rows to {RESULTS_PATH}. Validation passed: True")
+        print("Scenario counts:", dict(sorted(scenario_counts.items())))
+        print("Expected total:", sum(EXPECTED_SCENARIO_COUNTS.values()))
+        if archived_path:
+            print(f"Previous results preserved at {archived_path} (sha256={archived_hash})")
+        print(f"Run metadata written to {metadata_path}")
     finally:
         server.should_exit = True
 
 
 if __name__ == "__main__":
     asyncio.run(main())
-

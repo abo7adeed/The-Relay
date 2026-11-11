@@ -2,11 +2,11 @@
 
 import os
 import pytest
-from src.relay.retrieval.bm25_index import BM25Index
-from src.relay.retrieval.tool import RetrievalTool
-from src.relay.pipeline.engine import PipelineEngine
-from src.relay.pipeline.state import RequestContext
-from src.relay.models.base import LLMProvider, ModelResponse, StreamChunk
+from relay.retrieval.bm25_index import BM25Index
+from relay.retrieval.tool import RetrievalTool
+from relay.pipeline.engine import PipelineEngine
+from relay.pipeline.state import RequestContext
+from relay.models.base import LLMProvider, ModelResponse, StreamChunk
 from typing import AsyncGenerator
 
 
@@ -33,7 +33,7 @@ class ScriptedLLMProvider(LLMProvider):
         yield StreamChunk(delta_content="Scripted", finish_reason="stop")
 
     def get_limits(self):
-        from src.relay.models.base import ProviderLimits
+        from relay.models.base import ProviderLimits
         return ProviderLimits(model_id="scripted-test-model")
 
 

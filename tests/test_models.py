@@ -2,8 +2,8 @@
 
 import pytest
 import httpx
-from src.relay.models.base import ProviderLimits, ModelResponse, StreamChunk
-from src.relay.models.groq_provider import GroqProvider, GroqProviderError
+from relay.models.base import ProviderLimits, ModelResponse, StreamChunk
+from relay.models.groq_provider import GroqProvider, GroqProviderError
 
 
 def test_provider_limits_defaults():
@@ -75,3 +75,86 @@ async def test_groq_provider_mock_response():
         assert resp.tokens_out == 25
         assert resp.total_ms > 0
         assert resp.model_id == "llama-3.1-8b-instant"
+
+
+class _FakeResponse:
+    status_code = 200
+    text = ""
+    headers = httpx.Headers(
+        {"x-ratelimit-limit-requests": "30", "x-ratelimit-limit-tokens": "6000"}
+    )
+
+    def json(self):
+        return {
+            "id": "chatcmpl-fake",
+            "model": "llama-3.1-8b-instant",
+            "choices": [{"message": {"content": "ok"}, "finish_reason": "stop"}],
+            "usage": {"prompt_tokens": 1, "completion_tokens": 1},
+        }
+
+
+class _CapturingClient:
+    def __init__(self):
+        self.timeout = "unset"
+
+    async def post(self, url, headers, json, timeout=None):
+        self.timeout = timeout
+        return _FakeResponse()
+
+
+@pytest.mark.asyncio
+async def test_injected_client_receives_configured_timeout():
+    client = _CapturingClient()
+    provider = GroqProvider(api_key="gsk_dummy", client=client, timeout_seconds=2.5)
+    await provider.generate([{"role": "user", "content": "hello"}])
+    assert client.timeout == 2.5
+
+
+@pytest.mark.asyncio
+async def test_groq_provider_maps_non_network_transport_errors():
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.RemoteProtocolError("malformed HTTP response")
+
+    transport = httpx.MockTransport(handler)
+    async with httpx.AsyncClient(transport=transport) as client:
+        provider = GroqProvider(api_key="gsk_dummy", client=client)
+        with pytest.raises(GroqProviderError) as exc_info:
+            await provider.generate([{"role": "user", "content": "hello"}])
+    assert exc_info.value.status_code == 503
+
+
+@pytest.mark.asyncio
+async def test_groq_stream_truncation_without_terminal_marker_raises():
+    body = (
+        'data: {"choices":[{"delta":{"content":"partial"},"finish_reason":null}]}\n\n'
+    ).encode()
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, headers={"content-type": "text/event-stream"}, content=body)
+
+    transport = httpx.MockTransport(handler)
+    async with httpx.AsyncClient(transport=transport) as client:
+        provider = GroqProvider(api_key="gsk_dummy", client=client)
+        with pytest.raises(GroqProviderError, match="ended before a terminal") as exc_info:
+            async for _ in provider.generate_stream([{"role": "user", "content": "hello"}]):
+                pass
+    assert exc_info.value.status_code == 502
+
+
+@pytest.mark.asyncio
+async def test_groq_stream_finish_reason_is_accepted_as_terminal():
+    body = (
+        'data: {"choices":[{"delta":{"content":"hi"},"finish_reason":"stop"}]}\n\n'
+    ).encode()
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, headers={"content-type": "text/event-stream"}, content=body)
+
+    transport = httpx.MockTransport(handler)
+    async with httpx.AsyncClient(transport=transport) as client:
+        provider = GroqProvider(api_key="gsk_dummy", client=client)
+        chunks = [
+            sc.delta_content
+            async for sc in provider.generate_stream([{"role": "user", "content": "hello"}])
+        ]
+    assert "".join(chunks) == "hi"

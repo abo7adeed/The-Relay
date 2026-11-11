@@ -10,7 +10,8 @@ from typing import Dict, List, Any
 import numpy as np
 
 sys.path.insert(0, os.path.abspath("."))
-from src.relay.telemetry.validator import validate_results_csv
+sys.path.insert(0, os.path.abspath("src"))
+from relay.telemetry.validator import validate_expected_scenarios, validate_results_csv
 
 
 def pct_val(vals: List[float], p: float) -> float:
@@ -26,6 +27,10 @@ def compute_tables(csv_path: str = "results.csv", limits_path: str = "data/obser
 
     with open(csv_path, "r", encoding="utf-8") as f:
         rows = list(csv.DictReader(f))
+
+    complete, completeness_errors = validate_expected_scenarios(rows)
+    if not complete:
+        raise RuntimeError(f"results.csv incomplete: {completeness_errors[:5]}")
 
     with open(limits_path, "r", encoding="utf-8") as f:
         limits_data = json.load(f)
@@ -116,6 +121,18 @@ def compute_tables(csv_path: str = "results.csv", limits_path: str = "data/obser
         n_correct = sum(1 for r in rrows if r["answer_grade"] == "correct")
         n_wrong = sum(1 for r in rrows if r["answer_grade"] == "wrong")
         n_ref_ok = sum(1 for r in rrows if r["answer_grade"] == "refused_correctly")
+        n_ref_wrong = sum(1 for r in rrows if r["answer_grade"] == "refused_wrongly")
+        n_correct_cited = sum(
+            1
+            for r in rrows
+            if r["answer_grade"] == "correct" and r["citation_grade"] == "citation_correct"
+        )
+        citation_checked = [r for r in rrows if r["citation_grade"] in ("citation_correct", "citation_wrong")]
+        n_citation_correct = sum(1 for r in citation_checked if r["citation_grade"] == "citation_correct")
+        citation_correct_pct = (
+            round((n_citation_correct / len(citation_checked)) * 100.0, 1)
+            if citation_checked else 0.0
+        )
         # Note: percentages out of total 15 questions (or category-aware; brief puts sum/percentages on 15)
         toks_per_ans = sum(int(r["tokens_in"]) + int(r["tokens_out"]) for r in rrows) / n
         fts = [float(r["first_token_ms"]) for r in rrows]
@@ -125,9 +142,12 @@ def compute_tables(csv_path: str = "results.csv", limits_path: str = "data/obser
             "setting": label,
             "setting_id": sid,
             "questions": n,
-            "correct_cited_pct": round((n_correct / n) * 100.0, 1),
+            "correct_facts_pct": round((n_correct / n) * 100.0, 1),
+            "citation_correct_pct": citation_correct_pct,
+            "correct_and_cited_pct": round((n_correct_cited / n) * 100.0, 1),
             "wrong_pct": round((n_wrong / n) * 100.0, 1),
             "correctly_refused_pct": round((n_ref_ok / n) * 100.0, 1),
+            "refused_wrongly_pct": round((n_ref_wrong / n) * 100.0, 1),
             "tokens_per_answer": round(toks_per_ans, 1),
             "ft_p50": round(pct_val(fts, 50), 1),
             "ft_p95": round(pct_val(fts, 95), 1),
@@ -183,8 +203,10 @@ def print_summary(summary: Dict[str, Any]) -> None:
     print("\n=== TABLE 3: Retrieval Settings ===")
     for r in summary["table3"]:
         print(
-            f"{r['setting']:30s} | N={r['questions']} | corr={r['correct_cited_pct']:5.1f}% | "
+            f"{r['setting']:30s} | N={r['questions']} | facts={r['correct_facts_pct']:5.1f}% | "
+            f"cite_ok={r['citation_correct_pct']:5.1f}% | facts+cite={r['correct_and_cited_pct']:5.1f}% | "
             f"wrong={r['wrong_pct']:4.1f}% | ref_ok={r['correctly_refused_pct']:5.1f}% | "
+            f"ref_wrong={r['refused_wrongly_pct']:4.1f}% | "
             f"tok/ans={r['tokens_per_answer']:6.1f} | FT p50/p95={r['ft_p50']}/{r['ft_p95']} | "
             f"TOT p50/p95={r['tot_p50']}/{r['tot_p95']}"
         )

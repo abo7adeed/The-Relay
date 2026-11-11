@@ -1,5 +1,7 @@
 # The Relay: ML Systems Engineering Implementation Plan & Technical Blueprint
 
+> **HISTORICAL / SUPERSEDED (2026-11-11).** This is the Revision 3 blueprint retained for provenance. It is not the current status or evidence record. Revision 4 fixed the P0 benchmark-grading defect, regenerated the 120-row benchmark, corrected Table 3 semantics, and documented residual risks. See [`REVISION_4_IMPLEMENTATION_REPORT.md`](REVISION_4_IMPLEMENTATION_REPORT.md) and the current [`THE_RELAY_2_PAGE_REPORT.md`](THE_RELAY_2_PAGE_REPORT.md). Numbers below may describe pre-remediation hypotheses or the old `any()` grading.
+
 **Document Version:** Revision 3 — Evidence-Driven Implementation Plan  
 **Role:** Senior Backend / AI Systems Engineer  
 **Assignment:** The Relay — Research Assistant Pipeline & Production Load Benchmarking  

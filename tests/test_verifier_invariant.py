@@ -4,9 +4,9 @@ Verifies that ungrounded drafts are NEVER emitted to users and verification is N
 """
 
 import pytest
-from src.relay.pipeline.verifier_step import VerifierStep, SAFE_REFUSAL_MESSAGE, VERIFICATION_FAILED_MESSAGE
-from src.relay.pipeline.state import RequestContext
-from src.relay.retrieval.tool import RetrievedPassage
+from relay.pipeline.verifier_step import VerifierStep, SAFE_REFUSAL_MESSAGE, VERIFICATION_FAILED_MESSAGE
+from relay.pipeline.state import RequestContext
+from relay.retrieval.tool import RetrievedPassage
 
 
 def create_sample_passage():
@@ -82,4 +82,27 @@ def test_verifier_passes_clean_model_refusal():
     assert decision.approved is True
     assert decision.status == "verified_refusal"
     assert decision.final_text == SAFE_REFUSAL_MESSAGE
+
+
+def test_verifier_preserves_valid_cited_answer_with_hedged_disclaimer():
+    verifier = VerifierStep()
+    ctx = RequestContext(query="How many warmup steps?")
+    passage = RetrievedPassage(
+        chunk_id="att_022",
+        paper_id="1706.03762v7",
+        paper_title="Attention Is All You Need",
+        version="v7",
+        section_title="5.3 Optimizer",
+        page_number=7,
+        text="We used warmup _ steps = 4000 .",
+        score=12.0,
+    )
+    draft = (
+        "Warmup steps = 4,000 were used [Attention Is All You Need, 5.3 Optimizer, Page 7]. "
+        "Other details were not mentioned in the remaining passages."
+    )
+    decision = verifier.verify(ctx, draft, [passage], loop_count=0)
+    assert decision.approved is True
+    assert decision.status == "verified_grounded"
+    assert "4,000" in decision.final_text
 

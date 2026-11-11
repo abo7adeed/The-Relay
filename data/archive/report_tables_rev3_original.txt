@@ -1,0 +1,64 @@
+Total rows in results.csv: 120
+
+=== TABLE 2a: Latency ===
+steady            | stand-in | N= 4 | dur= 48.7s | rate=   5.0/m | FT p50/p95/p99=586.4/777.8/794.4 | TOT p50/p95/p99=586.4/777.8/794.4
+burst             | stand-in | N=20 | dur=  2.0s | rate=2036.2/m | FT p50/p95/p99=1228.9/1466.1/1798.4 | TOT p50/p95/p99=1228.9/1466.1/1798.4
+overload          | stand-in | N=24 | dur=  3.6s | rate= 398.4/m | FT p50/p95/p99=1275.4/1856.9/1979.3 | TOT p50/p95/p99=1275.4/1856.9/1979.3
+limit_halved      | stand-in | N=12 | dur= 22.2s | rate=  32.5/m | FT p50/p95/p99=15.5/3020.7/3024.6 | TOT p50/p95/p99=15.5/3020.7/3024.6
+budget_exhausted  | stand-in | N=15 | dur=  0.9s | rate=1041.9/m | FT p50/p95/p99=0.1/2.6/7.2 | TOT p50/p95/p99=0.1/2.6/7.2
+
+=== TABLE 2b: Outcomes ===
+steady            | ok=100.0% | 429=  0.0% | to=  0.0% | retries=0.00 | peakQ= 1 | tok/ans= 978.0 | $/1k=$0.0500
+burst             | ok= 25.0% | 429= 75.0% | to=  0.0% | retries=0.00 | peakQ=18 | tok/ans=1118.2 | $/1k=$0.0570
+overload          | ok= 20.8% | 429= 33.3% | to= 45.8% | retries=0.00 | peakQ=10 | tok/ans=1101.6 | $/1k=$0.0563
+limit_halved      | ok= 16.7% | 429= 83.3% | to=  0.0% | retries=0.17 | peakQ= 1 | tok/ans=1209.0 | $/1k=$0.0616
+budget_exhausted  | ok=  0.0% | 429=100.0% | to=  0.0% | retries=0.00 | peakQ= 1 | tok/ans=   0.0 | $/1k=$0.0000
+
+=== TABLE 3: Retrieval Settings ===
+350w / 50o, k=4, rerank=No     | N=15 | corr= 66.7% | wrong= 0.0% | ref_ok= 26.7% | tok/ans=1900.3 | FT p50/p95=565.0/743.8 | TOT p50/p95=565.0/743.8
+175w / 25o, k=6, rerank=No     | N=15 | corr= 60.0% | wrong= 0.0% | ref_ok= 26.7% | tok/ans=1789.4 | FT p50/p95=518.4/837.9 | TOT p50/p95=518.4/837.9
+350w / 50o, k=8->3, rerank=Yes | N=15 | corr= 66.7% | wrong= 0.0% | ref_ok= 26.7% | tok/ans=1373.1 | FT p50/p95=581.6/740.8 | TOT p50/p95=581.6/740.8
+
+=== SLOW SUCCESSFUL REQUEST TRACE (Heading 4) ===
+{
+  "request_id": "fc345e38-6746-4e7b-ba32-fbe25e3aaeec",
+  "scenario": "overload",
+  "source": "stand-in",
+  "start_time": "2026-11-11T18:17:10.466887+00:00",
+  "first_token_ms": "2015.176",
+  "total_ms": "2015.176",
+  "status": "ok",
+  "retries": "0",
+  "tokens_in": "1088",
+  "tokens_out": "61",
+  "retrieval_setting": "setting_3_hybrid_rerank",
+  "answer_grade": "correct",
+  "queue_wait_ms": "1164.29",
+  "working_ms": "850.879",
+  "retry_wait_ms": "0.0",
+  "model_first_token_ms": "1403.799",
+  "verification_status": "verified_grounded",
+  "peak_queue_length": "10"
+}
+
+=== RETRY-WORSENED REQUEST TRACE (Heading 6) ===
+{
+  "request_id": "0b4eb37e-476d-4bc7-94d0-bf61039adda2",
+  "scenario": "limit_halved",
+  "source": "stand-in",
+  "start_time": "2026-11-11T18:17:18.085351+00:00",
+  "first_token_ms": "3025.589",
+  "total_ms": "3025.589",
+  "status": "rate_limited",
+  "retries": "1",
+  "tokens_in": "0",
+  "tokens_out": "0",
+  "retrieval_setting": "setting_3_hybrid_rerank",
+  "answer_grade": "refused_wrongly",
+  "queue_wait_ms": "0.052",
+  "working_ms": "12.791",
+  "retry_wait_ms": "3012.736",
+  "model_first_token_ms": "0.0",
+  "verification_status": "verifier_error",
+  "peak_queue_length": "1"
+}

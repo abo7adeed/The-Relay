@@ -1,5 +1,7 @@
 # Phase 2.2 Implementation Report — F-04 / F-05 / F-06 Corrective Work
 
+> **HISTORICAL / SUPERSEDED (2026-11-11).** This report records an earlier corrective phase and its then-current `BLOCKED` status. The corpus was subsequently promoted and the pipeline completed. Revision 4 fixed the P0 benchmark-grading defect and regenerated the benchmark/table evidence. See [`REVISION_4_IMPLEMENTATION_REPORT.md`](REVISION_4_IMPLEMENTATION_REPORT.md) for the current status; the hashes and blocker described below are historical.
+
 **Repository:** `E:\Ai-projects\vaaniresearch-assignment`  
 **Date:** 2026-11-09  
 **Scope:** Authorized Phase 2.2 corrective implementation for F-04, F-05, and F-06 only.  

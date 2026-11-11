@@ -1,0 +1,25 @@
+{
+  "status": "PROBE_FAILED",
+  "model_configured": "qwen/qwen3.8-27b",
+  "model_returned": null,
+  "probe_successful": false,
+  "error_category": "HTTP_401",
+  "error_message": "Provider returned error status 401: {\"error\":{\"message\":\"Invalid API Key\",\"type\":\"invalid_request_error\",\"code\":\"invalid_api_key\"}}\n",
+  "documented_limits": {
+    "rpm": 30,
+    "tpm": 6000,
+    "rpd": 14400,
+    "tpd": 500000
+  },
+  "observed_limits": {
+    "rpm": null,
+    "tpm": null,
+    "rpd": null,
+    "tpd": null,
+    "recovery_window_seconds": null
+  },
+  "latency_ms": null,
+  "tokens_in": null,
+  "tokens_out": null,
+  "raw_headers": {}
+}

@@ -14,8 +14,8 @@ import re
 import collections
 import pytest
 import pymupdf
-from src.relay.corpus.fetcher import ARXIV_PAPERS, download_papers
-from src.relay.corpus.parser import (
+from relay.corpus.fetcher import ARXIV_PAPERS, download_papers
+from relay.corpus.parser import (
     parse_pdf,
     ParsedDocument,
     repair_hyphenation,
@@ -27,7 +27,7 @@ from src.relay.corpus.parser import (
     is_running_footer,
     is_watermark,
 )
-from src.relay.corpus.chunker import chunk_document, build_all_processed_chunks
+from relay.corpus.chunker import chunk_document, build_all_processed_chunks
 
 
 # ---------------------------------------------------------------------------

@@ -2,8 +2,41 @@
 
 import pytest
 import httpx
-from src.relay.models.standin_service import app, config as standin_cfg
-from src.relay.models.groq_provider import GroqProvider, GroqProviderError
+from relay.models.standin_service import StandInConfig, app, config as standin_cfg
+from relay.models.groq_provider import GroqProvider, GroqProviderError
+
+
+@pytest.fixture(autouse=True)
+def _restore_standin_config():
+    """Prevent mutable global simulator state from leaking between tests."""
+    standin_cfg.reset()
+    yield
+    standin_cfg.reset()
+
+
+def test_standin_config_instances_have_independent_windows():
+    first = StandInConfig()
+    second = StandInConfig()
+    first.request_window.append(1.0)
+    first.token_window.append((1.0, 10))
+    assert second.request_window == []
+    assert second.token_window == []
+
+
+def test_standin_config_reset_restores_defaults_in_place():
+    original_id = id(standin_cfg)
+    standin_cfg.ttft_mu = 1.0
+    standin_cfg.capacity_limit = 1
+    standin_cfg.request_window.append(1.0)
+    standin_cfg.force_daily_exhaustion = True
+
+    standin_cfg.reset()
+
+    assert id(standin_cfg) == original_id
+    assert standin_cfg.ttft_mu == 5.45
+    assert standin_cfg.capacity_limit == 5
+    assert standin_cfg.request_window == []
+    assert standin_cfg.force_daily_exhaustion is False
 
 
 @pytest.fixture
@@ -59,6 +92,23 @@ async def test_standin_non_streaming_and_sse_streaming_parity(standin_client):
         assert "4000" in joined
         assert "Page 7" in joined
         assert tok_in > 0 and tok_out > 0
+
+
+@pytest.mark.asyncio
+async def test_standin_admin_reset_restores_simulator_defaults(standin_client):
+    async with standin_client as client:
+        await client.post(
+            "/admin/configure",
+            params={"ttft_mu": 1.0, "capacity_limit": 1, "fault_probability": 0.5},
+        )
+        assert standin_cfg.ttft_mu == 1.0
+        assert standin_cfg.capacity_limit == 1
+
+        await client.post("/admin/reset")
+
+        assert standin_cfg.ttft_mu == 5.45
+        assert standin_cfg.capacity_limit == 5
+        assert standin_cfg.fault_probability == 0.0
 
 
 @pytest.mark.asyncio

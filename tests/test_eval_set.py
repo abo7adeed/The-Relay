@@ -33,6 +33,15 @@ def test_eval_questions_count_and_schema():
         assert "target_citation" in q
         assert "verified_quote" in q
         assert q["status"] == "VERIFIED_AGAINST_PDF"
+        assert "expected_facts" in q
+
+        if q["type"] in ("false_friend", "unanswerable"):
+            assert q["expected_facts"] == [], f"{q['id']} trap must have no factual grading criteria"
+        else:
+            assert isinstance(q["expected_facts"], list) and q["expected_facts"], (
+                f"{q['id']} answerable question must declare at least one mandatory expected fact"
+            )
+            assert all(isinstance(f, str) and f.strip() for f in q["expected_facts"])
 
 
 def test_eval_questions_categories():

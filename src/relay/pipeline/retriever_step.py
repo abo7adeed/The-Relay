@@ -1,9 +1,9 @@
 """Step 2: Retrieval Tool Execution Step."""
 
 from typing import List, Tuple, Optional
-from src.relay.retrieval.tool import RetrievalTool, RetrievedPassage
-from src.relay.pipeline.router import RouteDecision
-from src.relay.pipeline.state import RequestContext
+from relay.retrieval.tool import RetrievalTool, RetrievedPassage
+from relay.pipeline.router import RouteDecision
+from relay.pipeline.state import RequestContext
 
 
 class RetrieverStep:

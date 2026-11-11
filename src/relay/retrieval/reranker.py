@@ -5,7 +5,7 @@ import re
 from collections import Counter
 from typing import List, Dict, Any, Set, Optional
 import numpy as np
-from src.relay.retrieval.bm25_index import tokenize
+from relay.retrieval.bm25_index import tokenize
 
 STOPWORDS: Set[str] = {
     "the", "a", "an", "is", "are", "was", "were", "what", "how", "many",
@@ -34,10 +34,16 @@ class HybridReranker:
         self._idf: Optional[np.ndarray] = None
         self._chunk_matrix: Optional[np.ndarray] = None
         self._chunk_ids: Dict[str, int] = {}
+        self._corpus_signature: Optional[tuple[str, ...]] = None
         if chunks:
             self._build_tfidf_index(chunks)
 
     def _build_tfidf_index(self, chunks: List[Dict[str, Any]]) -> None:
+        self._chunk_ids = {}
+        self._vocab = {}
+        self._idf = None
+        self._chunk_matrix = None
+        self._corpus_signature = tuple(str(c.get("chunk_id", "")) for c in chunks)
         doc_feats = []
         df: Counter = Counter()
         for idx, c in enumerate(chunks):
@@ -75,6 +81,8 @@ class HybridReranker:
         if self._idf is None or not self._vocab:
             return None
         feats = _extract_subword_features(query)
+        if not feats:
+            return None
         counts = Counter(feats)
         vec = np.zeros(len(self._vocab), dtype=np.float32)
         for term, cnt in counts.items():
@@ -82,8 +90,9 @@ class HybridReranker:
             if v_idx is not None:
                 vec[v_idx] = (1.0 + math.log(cnt)) * self._idf[v_idx]
         norm = np.linalg.norm(vec)
-        if norm > 0:
-            vec /= norm
+        if norm == 0:
+            return None
+        vec /= norm
         return vec
 
     def search_and_rerank(
@@ -99,7 +108,9 @@ class HybridReranker:
         if not all_chunks:
             return []
 
-        if self._chunk_matrix is None or len(self._chunk_ids) != len(all_chunks):
+        if self._chunk_matrix is None or self._corpus_signature != tuple(
+            str(c.get("chunk_id", "")) for c in all_chunks
+        ):
             self._build_tfidf_index(all_chunks)
 
         # Build pool: BM25 candidates + top TF-IDF subword cosine candidates

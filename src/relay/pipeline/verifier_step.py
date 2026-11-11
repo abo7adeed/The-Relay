@@ -4,8 +4,8 @@ import re
 import logging
 from dataclasses import dataclass
 from typing import List, Optional, Set
-from src.relay.retrieval.tool import RetrievedPassage
-from src.relay.pipeline.state import RequestContext
+from relay.retrieval.tool import RetrievedPassage
+from relay.pipeline.state import RequestContext
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,8 @@ VERIFICATION_FAILED_MESSAGE = (
 
 
 def _normalize_numeric_tokens(text: str) -> str:
-    """Collapse PDF math spacing around decimals (e.g. '0 . 1' -> '0.1', '12 . 5' -> '12.5')."""
+    """Normalize thousands separators and PDF math spacing (e.g. '4,000' -> '4000', '0 . 1' -> '0.1')."""
+    text = re.sub(r"(?<=\d),(?=\d{3}\b)", "", text)
     return re.sub(r"(\d)\s*\.\s*(\d)", r"\1.\2", text)
 
 
@@ -77,12 +78,16 @@ class VerifierStep:
         loop_count: int = 0,
     ) -> VerificationDecision:
         """Audit generated draft against retrieved evidence passages."""
-        # Case 1: Model explicitly refused because evidence is missing
+        # Case 1: Model explicitly refused because evidence is missing (only if uncited or exact safe refusal text)
+        citations = self.citation_pattern.findall(draft_text)
+        draft_lower = draft_text.lower().strip()
         refusal_indicators = [
             "do not state", "does not state", "not contain information",
             "cannot answer", "not mentioned", "not provided", "do not provide",
         ]
-        if any(ind in draft_text.lower() for ind in refusal_indicators):
+        if (not citations and any(ind in draft_lower for ind in refusal_indicators)) or (
+            draft_lower == SAFE_REFUSAL_MESSAGE.lower()
+        ):
             return VerificationDecision(
                 approved=True,
                 status="verified_refusal",
@@ -91,8 +96,7 @@ class VerifierStep:
                 loop_recommended=False,
             )
 
-        # Case 2: Extract inline citations
-        citations = self.citation_pattern.findall(draft_text)
+        # Case 2: Require inline citations on non-refusal answers
 
         if not citations:
             if loop_count == 0:

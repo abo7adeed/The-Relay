@@ -7,12 +7,12 @@ import logging
 from typing import AsyncGenerator, Dict, List, Optional, Any
 import httpx
 
-from src.relay.models.base import LLMProvider, ModelResponse, StreamChunk, ProviderLimits
+from relay.models.base import LLMProvider, ModelResponse, StreamChunk, ProviderLimits
 
 logger = logging.getLogger(__name__)
 
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
-DEFAULT_GROQ_MODEL = "llama-3.1-8b-instant"
+DEFAULT_GROQ_MODEL = "qwen/qwen3.8-27b"
 
 
 class GroqProviderError(Exception):
@@ -51,12 +51,14 @@ class GroqProvider(LLMProvider):
         base_url: str = GROQ_BASE_URL,
         timeout_seconds: float = 30.0,
         client: Optional[httpx.AsyncClient] = None,
+        extra_body: Optional[Dict[str, Any]] = None,
     ):
         self.api_key = api_key if api_key is not None else os.getenv("GROQ_API_KEY", "")
         self.model_id = model_id
         self.base_url = base_url.rstrip("/")
         self.timeout_seconds = timeout_seconds
         self.client = client
+        self.extra_body: Dict[str, Any] = dict(extra_body or {})
         self.limits = ProviderLimits(model_id=self.model_id)
         self._last_headers: Dict[str, str] = {}
 
@@ -133,15 +135,20 @@ class GroqProvider(LLMProvider):
             "temperature": temperature,
             "max_tokens": max_tokens,
             "stream": False,
+            **self.extra_body,
         }
 
         if self.client:
             try:
-                resp = await self.client.post(url, headers=headers, json=payload)
+                resp = await self.client.post(
+                    url, headers=headers, json=payload, timeout=self.timeout_seconds
+                )
             except httpx.TimeoutException as e:
                 raise GroqProviderError(f"API call timed out after {self.timeout_seconds}s", status_code=504) from e
             except httpx.NetworkError as e:
                 raise GroqProviderError(f"API network connection failure: {e}", status_code=503) from e
+            except httpx.HTTPError as e:
+                raise GroqProviderError(f"API transport failure: {e}", status_code=503) from e
         else:
             async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
                 try:
@@ -150,6 +157,8 @@ class GroqProvider(LLMProvider):
                     raise GroqProviderError(f"API call timed out after {self.timeout_seconds}s", status_code=504) from e
                 except httpx.NetworkError as e:
                     raise GroqProviderError(f"API network connection failure: {e}", status_code=503) from e
+                except httpx.HTTPError as e:
+                    raise GroqProviderError(f"API transport failure: {e}", status_code=503) from e
 
         t_total = (time.perf_counter() - t0) * 1000
         telemetry_headers = self._parse_rate_limit_headers(resp.headers)
@@ -194,11 +203,15 @@ class GroqProvider(LLMProvider):
             "temperature": temperature,
             "max_tokens": max_tokens,
             "stream": True,
+            **self.extra_body,
         }
 
         async def _consume(client: httpx.AsyncClient) -> AsyncGenerator[StreamChunk, None]:
+            saw_terminal = False
             try:
-                async with client.stream("POST", url, headers=headers, json=payload) as resp:
+                async with client.stream(
+                    "POST", url, headers=headers, json=payload, timeout=self.timeout_seconds
+                ) as resp:
                     telemetry_headers = self._parse_rate_limit_headers(resp.headers)
                     if resp.status_code != 200:
                         body = await resp.aread()
@@ -214,6 +227,7 @@ class GroqProvider(LLMProvider):
                             continue
                         data_str = line[6:].strip()
                         if data_str == "[DONE]":
+                            saw_terminal = True
                             break
                         try:
                             chunk_json = json.loads(data_str)
@@ -221,6 +235,8 @@ class GroqProvider(LLMProvider):
                             delta = choice.get("delta", {})
                             delta_text = delta.get("content", "")
                             finish_reason = choice.get("finish_reason")
+                            if finish_reason is not None:
+                                saw_terminal = True
                             usage = (
                                 chunk_json.get("x_groq", {}).get("usage")
                                 or chunk_json.get("usage")
@@ -241,6 +257,15 @@ class GroqProvider(LLMProvider):
                 raise GroqProviderError(f"Streaming call timed out after {self.timeout_seconds}s", status_code=504) from e
             except httpx.NetworkError as e:
                 raise GroqProviderError(f"Streaming network failure: {e}", status_code=503) from e
+            except httpx.HTTPError as e:
+                raise GroqProviderError(f"Streaming transport failure: {e}", status_code=503) from e
+
+            if not saw_terminal:
+                raise GroqProviderError(
+                    "Streaming response ended before a terminal [DONE] marker or finish_reason; "
+                    "refusing to treat a truncated stream as complete.",
+                    status_code=502,
+                )
 
         if self.client:
             async for sc in _consume(self.client):

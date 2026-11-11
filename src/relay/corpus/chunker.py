@@ -4,7 +4,7 @@ import json
 import os
 from dataclasses import dataclass, asdict
 from typing import List, Dict, Any
-from src.relay.corpus.parser import ParsedDocument
+from relay.corpus.parser import ParsedDocument
 
 
 @dataclass

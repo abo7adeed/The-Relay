@@ -9,7 +9,7 @@ Validates that:
 
 import time
 import pytest
-from src.relay.pipeline.state import LatencyTimers
+from relay.pipeline.state import LatencyTimers
 
 
 def test_latency_accounting_isolation_and_math():

@@ -2,11 +2,11 @@
 
 import json
 import pytest
-from src.relay.retrieval.bm25_index import BM25Index
-from src.relay.retrieval.tool import RetrievalTool
-from src.relay.pipeline.verifier_step import VerifierStep, VERIFICATION_FAILED_MESSAGE
-from src.relay.pipeline.state import RequestContext
-from src.relay.retrieval.tool import RetrievedPassage
+from relay.retrieval.bm25_index import BM25Index
+from relay.retrieval.tool import RetrievalTool
+from relay.pipeline.verifier_step import VerifierStep, VERIFICATION_FAILED_MESSAGE
+from relay.pipeline.state import RequestContext
+from relay.retrieval.tool import RetrievedPassage
 
 
 def test_setting_3_hybrid_reranker_ranks_and_caps():
