@@ -1,0 +1,67 @@
+{
+  "status": "VERIFIED_ONLINE",
+  "provider_type": "direct_groq",
+  "endpoint_url": "https://api.groq.com/openai/v1",
+  "auth_mode": "direct_groq_api_key",
+  "respan_configured": false,
+  "verified_at_utc": "2026-11-11T20:16:10.115494+00:00",
+  "model_configured": "qwen/qwen3.8-27b",
+  "model_returned": "qwen/qwen3.8-27b",
+  "available_models": [
+    "allam-2-7b",
+    "canopylabs/orpheus-arabic-saudi",
+    "canopylabs/orpheus-v1-english",
+    "meta-llama/llama-prompt-guard-2-22m",
+    "meta-llama/llama-prompt-guard-2-86m",
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-20b",
+    "openai/gpt-oss-safeguard-20b",
+    "qwen/qwen3.8-27b",
+    "whisper-large-v3",
+    "whisper-large-v3-turbo"
+  ],
+  "legacy_standin_model_id": "llama-3.1-8b-instant",
+  "legacy_standin_model_available_on_account": false,
+  "probe_successful": true,
+  "error_category": null,
+  "error_message": null,
+  "limits_source": "http_response_headers",
+  "documented_limits": {
+    "note": "Measured on live direct_groq (https://api.groq.com/openai/v1) for qwen/qwen3.8-27b. Headers emit x-ratelimit-limit-requests=1000 (reset=1m26.4s) and x-ratelimit-limit-tokens=8000 (reset=269ms). RPM and TPD are not directly returned in headers and remain null (unverified).",
+    "rpm": null,
+    "tpm": 8000,
+    "rpd": 1000,
+    "tpd": null
+  },
+  "observed_limits": {
+    "rpm": null,
+    "tpm": 8000,
+    "rpd": 1000,
+    "tpd": null,
+    "reset_requests": "1m26.4s",
+    "reset_tokens": "269ms"
+  },
+  "latency_ms": 368.9,
+  "tokens_in": 20,
+  "tokens_out": 2,
+  "response_preview": "READY",
+  "raw_headers": {
+    "x-ratelimit-limit-requests": "1000",
+    "x-ratelimit-limit-tokens": "8000",
+    "x-ratelimit-remaining-requests": "999",
+    "x-ratelimit-remaining-tokens": "7964",
+    "x-ratelimit-reset-requests": "1m26.4s",
+    "x-ratelimit-reset-tokens": "269ms"
+  },
+  "unverified_fields": [
+    "rpm",
+    "tpd",
+    "multi_tenant_queue_saturation",
+    "sustained_burst_429_backoff"
+  ],
+  "limitations": [
+    "x-ratelimit-limit-requests on this account maps to RPD (reset_requests ~1m26.4s = 86400s/1000); per-minute RPM is not emitted in headers.",
+    "Total daily token cap (TPD) is not emitted in headers and remains unverified.",
+    "Stand-in simulator in results.csv simulates llama-3.1-8b-instant (30 RPM / 6000 TPM), whereas this live account serves qwen/qwen3.8-27b (8000 TPM / 1000 RPD) and does not expose llama-3.1-8b-instant."
+  ]
+}

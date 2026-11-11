@@ -1,0 +1,42 @@
+{
+  "generated_at": "2026-11-11T19:12:53.705373+00:00",
+  "benchmark_started_at": "2026-11-11T19:11:06.964616+00:00",
+  "git_commit": "cfb9e0f17248c110817e4155f553f5ff76a33779",
+  "python_version": "3.14.3",
+  "benchmark_script": {
+    "path": "benchmarks/run_benchmarks.py",
+    "sha256": "87588f848ea1a8fa7e3959743074c8870b15d47c314720cb315421231c892169"
+  },
+  "eval_questions": {
+    "path": "data/eval_questions.json",
+    "sha256": "249b0bc0a425ea57c6f568ba5bbf95ece32cec5c02c2cd6d9a84614bedcea421"
+  },
+  "results_csv": {
+    "path": "results.csv",
+    "sha256": "441b0004bf0bc493fe091ca23e9b3689c14b19c00868233ed0beb72cc23c3cdd",
+    "rows": 120
+  },
+  "scenario_counts": {
+    "budget_exhausted": 15,
+    "burst": 20,
+    "limit_halved": 12,
+    "overload": 24,
+    "retrieval_eval": 45,
+    "steady": 4
+  },
+  "answer_grade_counts": {
+    "correct": 39,
+    "refused_correctly": 12,
+    "refused_wrongly": 63,
+    "wrong": 6
+  },
+  "citation_grade_counts": {
+    "citation_correct": 20,
+    "citation_not_applicable": 87,
+    "citation_wrong": 13
+  },
+  "archived_previous_results": "data/archive\\results_20261111T191253Z.csv",
+  "archived_previous_sha256": "b2f0a1c0b772e478974b81e25dba88fba3e5075aec561ea9feaac1cd283a29f5",
+  "groq_status": "NOT_VERIFIED_MISSING_CREDENTIALS",
+  "execution_mode": "stand-in HTTP/SSE; real Groq not measured"
+}

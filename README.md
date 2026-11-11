@@ -38,10 +38,12 @@ The-Relay/
 │
 ├── docs/
 │   ├── THE_RELAY_2_PAGE_REPORT.md      # Final 2-page technical report, live vs. stand-in tables
-│   ├── FINAL_SUBMISSION_AUDIT.md       # Final submission reconciliation & release audit (post-Rev 4)
+│   ├── FINAL_SUBMISSION_AUDIT.md       # Final submission quality gate & requirement matrix
+│   ├── AI_CONVERSATION_HISTORY.md      # Verbatim chronological export of all 18 user prompts
 │   ├── REVISION_4_IMPLEMENTATION_REPORT.md  # P0 remediation, evidence, reconciliation addendum
 │   ├── IMPLEMENTATION_PLAN.md          # Historical Revision 3 blueprint (superseded)
 │   └── PHASE_2_2_IMPLEMENTATION_REPORT.md   # Historical Phase 2.2 record (superseded)
+├── submission/                         # Clean deliverable package (report, CSV, logs, evidence)
 │
 ├── src/relay/
 │   ├── config.py                       # Validated Pydantic settings and safety invariant
@@ -117,6 +119,9 @@ python -c "from relay.telemetry.validator import validate_results_csv; ok, errs 
 
 ## Key Documentation
 - **[2-Page Technical Report](docs/THE_RELAY_2_PAGE_REPORT.md):** Complete engineering write-up, corrected tables, latency decomposition, failure case studies, and Vaani feedback.
+- **[Final Submission Audit](docs/FINAL_SUBMISSION_AUDIT.md):** Requirement-by-requirement verification gate (`PASS` / `NOT VERIFIED`), test logs, and submission checklist.
+- **[AI Conversation History](docs/AI_CONVERSATION_HISTORY.md):** Unedited verbatim chronological prompt log across all 18 development turns.
 - **[Revision 4 Implementation Report](docs/REVISION_4_IMPLEMENTATION_REPORT.md):** P0 grading defect, before/after evidence, file-by-file changes, exact commands, residual risks, and final status.
+- **[Submission Folder](submission/README.md):** Clean curated deliverable package ready for reviewer inspection.
 - **[Implementation Plan (Revision 3, historical)](docs/IMPLEMENTATION_PLAN.md):** Original evidence-driven blueprint; superseded by Revision 4.
 - **[Raw Benchmark Telemetry](results.csv):** Per-request metrics (`120` rows) validated with `|total_ms - (queue_wait_ms + working_ms + retry_wait_ms)| < 15 ms`.
